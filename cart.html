@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -47,6 +46,20 @@ function getTotalPrice(){
     return acc + price * item.qty;
   }, 0);
 }
+
+// تجهيز البريد قبل الإرسال
+function prepareEmail() {
+  let name = document.querySelector('input[name="First Name"]').value;
+  let lname = document.querySelector('input[name="Last Name"]').value;
+  let phone = document.querySelector('input[name="Phone"]').value;
+  let email = document.querySelector('input[name="Email"]').value;
+
+  // تنسيق المنتجات
+  let productsText = cart.map(i => `${i.name} [${i.price}] [x${i.qty}]`).join('\n');
+
+  document.querySelector('input[name="Products"]').value =
+    `الاسم: ${name} ${lname}\nرقم الهاتف: ${phone}\nالبريد الإلكتروني: ${email}\nالمنتجات:\n${productsText}`;
+}
 </script>
 </head>
 <body>
@@ -92,7 +105,7 @@ document.getElementById("totalPrice").textContent = getTotalPrice();
   <input type="tel" name="Phone" placeholder="رقم الهاتف" required>
   <input type="email" name="Email" placeholder="البريد الإلكتروني (اختياري)">
   <input type="hidden" name="Products" value="">
-  <button type="submit" onclick="this.form.Products.value = cart.map(i=>i.name+' x'+i.qty).join(', ')">إرسال الطلب</button>
+  <button type="submit" onclick="prepareEmail()">إرسال الطلب</button>
 </form>
 
 </body>
