@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAIM Store</title>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; margin:0; direction:rtl; }
+header { background:#000; color:#fff; padding:15px; text-align:center; }
+#searchBar { width:90%; max-width:400px; padding:10px; margin:15px auto; display:block; border-radius:5px; border:1px solid #ccc; }
+
+.product { background:#fff; margin:15px; padding:15px; border-radius:10px; text-align:center; }
+.product img { width:100%; max-width:250px; border-radius:10px; margin-bottom:10px; }
+.price { color:#008000; font-size:18px; font-weight:bold; }
+button { background:#000; color:#fff; border:none; padding:10px 15px; border-radius:5px; margin-top:10px; cursor:pointer; }
+
+#cartIcon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background:#000;
+  color:#fff;
+  font-size:24px;
+  padding:15px;
+  border-radius:50%;
+  cursor:pointer;
+  z-index:1000;
+}
+
+#cartIcon .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background:red;
+  color:white;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:bold;
+}
+</style>
+
+<script>
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+// قائمة المنتجات
+let products = [
+  {name:"نظارات شمسية", price:"150 MAD", img:"https://images.pexels.com/photos/701877/pexels-photo-701877.jpeg"},
+  {name:"سترة أنيقة", price:"250 MAD", img:"https://images.pexels.com/photos/749072/pexels-photo-749072.jpeg"},
+  {name:"ساعة يد", price:"300 MAD", img:"https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg"}
+];
+
+// إضافة منتج للسلة بدون alert
+function addToCart(name, price){
+  let item = cart.find(i => i.name === name);
+  if(item){
+    item.qty +=1;
+  }else{
+    cart.push({name, price, qty:1});
+  }
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCartBadge();
+}
+
+// تحديث الرقم في الدائرة
+function updateCartBadge(){
+  let totalQty = cart.reduce((acc, item)=> acc + item.qty, 0);
+  document.getElementById("cartBadge").textContent = totalQty;
+}
+
+// التوجه لصفحة السلة
+function goToCart(){
+  window.location.href = "cart.html";
+}
+
+// عرض المنتجات على الصفحة
+function displayProducts(filteredProducts){
+  const container = document.getElementById("productsContainer");
+  container.innerHTML = "";
+  filteredProducts.forEach(product=>{
+    const div = document.createElement("div");
+    div.className = "product";
+    div.innerHTML = `
+      <img src="${product.img}" alt="${product.name}">
+      <h3>${product.name}</h3>
+      <p>وصف المنتج</p>
+      <p class="price">${product.price}</p>
+      <button onclick="addToCart('${product.name}','${product.price}')">اضافة للسلة</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// البحث داخل المنتجات
+function searchProducts(){
+  const query = document.getElementById("searchBar").value.toLowerCase();
+  const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+  displayProducts(filtered);
+}
+
+// عند تحميل الصفحة
+window.onload = ()=>{
+  displayProducts(products);
+  updateCartBadge();
+};
+</script>
+</head>
+
+<body>
+
+<header>
+  <h1>SAIM</h1>
+  <p>متجر منتجات</p>
+</header>
+
+<input type="text" id="searchBar" placeholder="ابحث عن منتج..." onkeyup="searchProducts()">
+
+<div id="productsContainer"></div>
+
+<div id="cartIcon" onclick="goToCart()">
+  🛒
+  <div class="badge" id="cartBadge">0</div>
+</div>
+
+</body>
+</html>
