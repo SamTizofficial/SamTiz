@@ -10,6 +10,8 @@ body { font-family: Arial; background:#f5f5f5; margin:0; direction:rtl; }
 header { background:#069; color:#fff; padding:15px; text-align:center; }
 .cart-item { background:#fff; margin:15px; padding:15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; }
 button { background:#069; color:#fff; border:none; padding:5px 10px; border-radius:5px; margin-left:5px; cursor:pointer; }
+form { background:#fff; margin:15px; padding:15px; border-radius:10px; }
+input { width:100%; padding:8px; margin:8px 0; }
 #totalInfo { background:#fff; margin:15px; padding:15px; border-radius:10px; }
 </style>
 
@@ -27,8 +29,16 @@ button { background:#069; color:#fff; border:none; padding:5px 10px; border-radi
   <p style="color:red; font-weight:bold;">التوصيل متوفر حاليا بمدينة تزنيت فقط</p>
 </div>
 
+<form id="orderForm">
+  <h3>معلومات الطلب</h3>
+  <input type="text" name="First Name" placeholder="الاسم الشخصي" required>
+  <input type="text" name="Last Name" placeholder="الاسم العائلي" required>
+  <input type="tel" name="Phone" placeholder="رقم الهاتف" required>
+  <input type="email" name="Email" placeholder="البريد الإلكتروني (اختياري)">
+  <button type="submit">إرسال الطلب</button>
+</form>
+
 <script>
-// بيانات السلة
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 const cartItemsDiv = document.getElementById("cartItems");
 
@@ -43,28 +53,57 @@ function renderCart(){
   cart.forEach((item,index)=>{
     const div = document.createElement("div");
     div.className = "cart-item";
-    div.innerHTML = `<span>${item.name} - ${item.price} x${item.qty}</span>`;
+    div.innerHTML = `
+      <span>${item.name} - ${item.price} x${item.qty}</span>
+      <div>
+        <button onclick="increaseQty(${index})">+</button>
+        <button onclick="decreaseQty(${index})">-</button>
+        <button onclick="removeItem(${index})">إزالة</button>
+      </div>
+    `;
     cartItemsDiv.appendChild(div);
   });
 }
 
-renderCart();
+function removeItem(index){
+  cart.splice(index,1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
 
-// إرسال تلقائي للواتساب عند فتح الصفحة
-window.onload = function() {
-  if(cart.length === 0) return; // إذا السلة فارغة لا شيء
+function increaseQty(index){
+  cart[index].qty += 1;
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
 
-  // بيانات العميل (يمكن تعديلها أو أخذها من الفورم)
-  let name = "Oussama";
-  let lname = "Saim";
-  let phone = "0712345678";
-  let email = "Example@gmail.com";
+function decreaseQty(index){
+  if(cart[index].qty > 1){
+    cart[index].qty -= 1;
+  }else{
+    removeItem(index);
+  }
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
 
-  // تجهيز نص المنتجات
+// إرسال الطلب عبر WhatsApp بدون المجموع
+document.getElementById("orderForm").onsubmit = function(e){
+  e.preventDefault();
+
+  let name = document.querySelector('input[name="First Name"]').value;
+  let lname = document.querySelector('input[name="Last Name"]').value;
+  let phone = document.querySelector('input[name="Phone"]').value;
+  let email = document.querySelector('input[name="Email"]').value || "";
+
+  if(cart.length === 0){
+    alert("سلة المشتريات فارغة!");
+    return;
+  }
+
   let productsText = cart.map(i => `*[${i.name}]* [${i.price}] [x${i.qty}]`).join('%0A');
   let emailPart = email ? `%0A*البريد الإلكتروني:* ${email}` : "";
 
-  // تكوين الرسالة بدون المجموع
   let message = `*طلب جديد:*%0A*الاسم:* ${name} ${lname}%0A*رقم الهاتف:* ${phone}${emailPart}%0A*المنتجات:*%0A${productsText}`;
 
   let whatsappNumber = "212696467092"; 
@@ -72,6 +111,8 @@ window.onload = function() {
 
   window.open(url, "_blank", "noopener,noreferrer");
 }
+
+renderCart();
 </script>
 
 </body>
