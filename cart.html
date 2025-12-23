@@ -15,19 +15,66 @@ input { width:100%; padding:8px; margin:8px 0; }
 #totalInfo { background:#fff; margin:15px; padding:15px; border-radius:10px; }
 </style>
 
+</head>
+<body>
+
+<header>
+  <h1>سلة المشتريات</h1>
+</header>
+
+<div id="cartItems"></div>
+
+<div id="totalInfo">
+  <p>طريقة الدفع: الدفع عند الاستلام</p>
+  <p style="color:red; font-weight:bold;">التوصيل متوفر حاليا بمدينة تزنيت فقط</p>
+</div>
+
+<form id="orderForm">
+  <h3>معلومات الطلب</h3>
+  <input type="text" name="First Name" placeholder="الاسم الشخصي" required>
+  <input type="text" name="Last Name" placeholder="الاسم العائلي" required>
+  <input type="tel" name="Phone" placeholder="رقم الهاتف" required>
+  <input type="email" name="Email" placeholder="البريد الإلكتروني (اختياري)">
+  <button type="submit">إرسال الطلب</button>
+</form>
+
 <script>
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+const cartItemsDiv = document.getElementById("cartItems");
+
+// عرض السلة
+function renderCart(){
+  cartItemsDiv.innerHTML = "";
+  if(cart.length === 0){
+    cartItemsDiv.innerHTML = "<p>السلة فارغة</p>";
+    return;
+  }
+
+  cart.forEach((item,index)=>{
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+      <span>${item.name} - ${item.price} x${item.qty}</span>
+      <div>
+        <button onclick="increaseQty(${index})">+</button>
+        <button onclick="decreaseQty(${index})">-</button>
+        <button onclick="removeItem(${index})">إزالة</button>
+      </div>
+    `;
+    cartItemsDiv.appendChild(div);
+  });
+}
 
 function removeItem(index){
   cart.splice(index,1);
   localStorage.setItem("cart", JSON.stringify(cart));
-  location.reload();
+  renderCart();
 }
 
 function increaseQty(index){
   cart[index].qty += 1;
   localStorage.setItem("cart", JSON.stringify(cart));
-  location.reload();
+  renderCart();
 }
 
 function decreaseQty(index){
@@ -37,85 +84,36 @@ function decreaseQty(index){
     removeItem(index);
   }
   localStorage.setItem("cart", JSON.stringify(cart));
-  location.reload();
+  renderCart();
 }
 
-function getTotalPrice(){
-  return cart.reduce((acc, item) => {
-    let price = parseInt(item.price.replace(/[^0-9]/g,''));
-    return acc + price * item.qty;
-  }, 0);
-}
+// إرسال الطلب عبر WhatsApp بدون المجموع
+document.getElementById("orderForm").onsubmit = function(e){
+  e.preventDefault();
 
-// تجهيز رسالة واتساب
-function sendWhatsApp(){
   let name = document.querySelector('input[name="First Name"]').value;
   let lname = document.querySelector('input[name="Last Name"]').value;
   let phone = document.querySelector('input[name="Phone"]').value;
-  let email = document.querySelector('input[name="Email"]').value;
+  let email = document.querySelector('input[name="Email"]').value || "";
 
   if(cart.length === 0){
     alert("سلة المشتريات فارغة!");
     return;
   }
 
-  // تكوين نص المنتجات بالشكل: اسم [السعر] [xالكمية]
-  let productsText = cart.map(i => `${i.name} [${i.price}] [x${i.qty}]`).join('%0A');
+  let productsText = cart.map(i => `*[${i.name}]* [${i.price}] [x${i.qty}]`).join('%0A');
+  let emailPart = email ? `%0A*البريد الإلكتروني:* ${email}` : "";
 
-  let message = `طلب جديد:%0Aالاسم: ${name} ${lname}%0Aرقم الهاتف: ${phone}%0Aالبريد الإلكتروني: ${email}%0Aالمنتجات:%0A${productsText}`;
+  let message = `*طلب جديد:*%0A*الاسم:* ${name} ${lname}%0A*رقم الهاتف:* ${phone}${emailPart}%0A*المنتجات:*%0A${productsText}`;
 
-  // ضع رقمك هنا بدون +
-  let whatsappNumber = "+212696467092"; 
+  let whatsappNumber = "212696467092"; 
   let url = `https://wa.me/${whatsappNumber}?text=${message}`;
 
-  window.open(url, "_blank");
+  window.open(url, "_blank", "noopener,noreferrer");
 }
+
+renderCart();
 </script>
-</head>
-<body>
-
-<header>
-  <h1>سلة المشتريات</h1>
-</header>
-
-<div id="cartItems">
-  <script>
-  if(cart.length===0){
-    document.write("<p>السلة فارغة</p>");
-  } else {
-    cart.forEach((item,index)=>{
-      document.write(`
-        <div class="cart-item">
-          <span>${item.name} - ${item.price} x${item.qty}</span>
-          <div>
-            <button onclick="increaseQty(${index})">+</button>
-            <button onclick="decreaseQty(${index})">-</button>
-            <button onclick="removeItem(${index})">إزالة</button>
-          </div>
-        </div>
-      `);
-    });
-  }
-  </script>
-</div>
-
-<div id="totalInfo">
-  <p>المجموع الكلي: <span id="totalPrice"></span> MAD</p>
-  <p>طريقة الدفع: الدفع عند الاستلام</p>
-  <p style="color:red; font-weight:bold;">التوصيل متوفر حاليا بمدينة تزنيت فقط</p>
-</div>
-<script>
-document.getElementById("totalPrice").textContent = getTotalPrice();
-</script>
-
-<form onsubmit="sendWhatsApp(); return false;">
-  <h3>معلومات الطلب</h3>
-  <input type="text" name="First Name" placeholder="الاسم الشخصي" required>
-  <input type="text" name="Last Name" placeholder="الاسم العائلي" required>
-  <input type="tel" name="Phone" placeholder="رقم الهاتف" required>
-  <input type="email" name="Email" placeholder="البريد الإلكتروني (اختياري)">
-  <button type="submit">إرسال الطلب</button>
-</form>
 
 </body>
 </html>
