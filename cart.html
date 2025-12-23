@@ -47,18 +47,28 @@ function getTotalPrice(){
   }, 0);
 }
 
-// تجهيز البريد قبل الإرسال
-function prepareEmail() {
+// تجهيز رسالة واتساب
+function sendWhatsApp(){
   let name = document.querySelector('input[name="First Name"]').value;
   let lname = document.querySelector('input[name="Last Name"]').value;
   let phone = document.querySelector('input[name="Phone"]').value;
   let email = document.querySelector('input[name="Email"]').value;
 
-  // تنسيق المنتجات
-  let productsText = cart.map(i => `${i.name} [${i.price}] [x${i.qty}]`).join('\n');
+  if(cart.length === 0){
+    alert("سلة المشتريات فارغة!");
+    return;
+  }
 
-  document.querySelector('input[name="Products"]').value =
-    `الاسم: ${name} ${lname}\nرقم الهاتف: ${phone}\nالبريد الإلكتروني: ${email}\nالمنتجات:\n${productsText}`;
+  // تكوين نص المنتجات بالشكل: اسم [السعر] [xالكمية]
+  let productsText = cart.map(i => `${i.name} [${i.price}] [x${i.qty}]`).join('%0A');
+
+  let message = `طلب جديد:%0Aالاسم: ${name} ${lname}%0Aرقم الهاتف: ${phone}%0Aالبريد الإلكتروني: ${email}%0Aالمنتجات:%0A${productsText}`;
+
+  // ضع رقمك هنا بدون +
+  let whatsappNumber = "+212696467092"; 
+  let url = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+  window.open(url, "_blank");
 }
 </script>
 </head>
@@ -98,14 +108,13 @@ function prepareEmail() {
 document.getElementById("totalPrice").textContent = getTotalPrice();
 </script>
 
-<form action="mailto:SamTizofficial@gmail.com" method="post" enctype="text/plain">
+<form onsubmit="sendWhatsApp(); return false;">
   <h3>معلومات الطلب</h3>
   <input type="text" name="First Name" placeholder="الاسم الشخصي" required>
   <input type="text" name="Last Name" placeholder="الاسم العائلي" required>
   <input type="tel" name="Phone" placeholder="رقم الهاتف" required>
   <input type="email" name="Email" placeholder="البريد الإلكتروني (اختياري)">
-  <input type="hidden" name="Products" value="">
-  <button type="submit" onclick="prepareEmail()">إرسال الطلب</button>
+  <button type="submit">إرسال الطلب</button>
 </form>
 
 </body>
